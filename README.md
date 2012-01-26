@@ -12,7 +12,14 @@ config file and one controller.
 
 ## Usage
 
-Coming soon. Take a look at application/controllers/api/example.php for
+- Copy *application/config/rest.php* to your *application/config* directory
+- (optionally) Copy *application/controllers/api* to your *application/controllers* directory to work with the sample controller
+- Copy *application/libraries/Format.php* and *application/libraries/REST_Controller.php* to your *application/libraries* directory
+- (optionally) Test that everything works by running *<yoursite>/api/example/user/1* to see if the default result is displayed
+- Create a new controller that extends REST_Controller
+- Add some methods (resources) to your controller of the form *resource_method()* e.g. *users_get()*
+
+Take a look at application/controllers/api/example.php for additional 
 hints until the default controller demo is built and ready.
 
 I haven't got around to writing any documentation specifically for this project
