@@ -12,7 +12,7 @@ _Note: for 1.7.x support download v2.2 from Downloads tab_
 
 ## Installation
 
-Drag and drop the **application/libraries/Format.php** and **application/libraries/REST_Controller.php** files into your application's directories. Either autoload the `REST_Controller` class or `require_once` it at the top of your controllers to load it into the scope. Additionally, copy the **rest.php** file from **application/config** in your application's configuration directory.
+Drag and drop the **application/libraries/Format.php** and **application/libraries/REST_Controller.php** files into your application's directories. To use 'require_once` it at the top of your controllers to load it into the scope. Additionally, copy the **rest.php** file from **application/config** in your application's configuration directory.
 
 ## Handling Requests
 
@@ -35,12 +35,21 @@ This allows you to implement a RESTful interface easily:
 
 `REST_Controller` also supports `PUT` and `DELETE` methods, allowing you to support a truly RESTful interface.
 
+
 Accessing parameters is also easy. Simply use the name of the HTTP verb as a method:
 
 	$this->get('blah'); // GET param
 	$this->post('blah'); // POST param
 	$this->put('blah'); // PUT param
-	$this->delete('blah'); // DELETE param
+
+The HTTP spec for DELETE requests precludes the use of parameters.  For delete requests, you can add items to the URL
+
+		public function index_delete($id)
+		{
+    		$this->response(array(
+        		'returned from delete:' => $id,
+    		));			
+		}
 
 ## Content Types
 
@@ -83,19 +92,19 @@ If you don't specify a response code, and the data you respond with `== FALSE` (
 
 ## Multilingual Support
 
-If your application uses language files to support multiple locales, `REST_Controller` will automatically parse the HTTP `Accept-Language` header and provide the language(s) in your actions. This information can be found in the `$this->request->lang` object:
+If your application uses language files to support multiple locales, `REST_Controller` will automatically parse the HTTP `Accept-Language` header and provide the language(s) in your actions. This information can be found in the `$this->response->lang` object:
 
 	public function __construct()
 	{
 		parent::__construct();
 
-		if (is_array($this->request->lang))
+		if (is_array($this->response->lang))
 		{
-			$this->load->language('application', $this->request->lang[0]);
+			$this->load->language('application', $this->response->lang[0]);
 		}
 		else
 		{
-			$this->load->language('application', $this->request->lang);
+			$this->load->language('application', $this->response->lang);
 		}
 	}
 
@@ -109,7 +118,9 @@ You can enable basic authentication by setting the `$config['rest_auth']` to `'b
 
 Enabling digest auth is similarly easy. Configure your desired logins in the config file like above, and set `$config['rest_auth']` to `'digest'`. The class will automatically send out the headers to enable digest auth.
 
-Both methods of authentication can be secured further by using an IP whitelist. If you enable `$config['rest_ip_whitelist_enabled']` in your config file, you can then set a list of allowed IPs.
+If you're tying this library into an AJAX endpoint where clients authenticate using PHP sessions then you may not like either of the digest nor basic authentication methods. In that case, you can tell the REST Library what PHP session variable to check for. If the variable exists, then the user is authorized. It will be up to your application to set that variable. You can define the variable in ``$config['auth_source']``.  Then tell the library to use a php session variable by setting ``$config['rest_auth']`` to ``session``.
+
+All three methods of authentication can be secured further by using an IP whitelist. If you enable `$config['rest_ip_whitelist_enabled']` in your config file, you can then set a list of allowed IPs.
 
 Any client connecting to your API will be checked against the whitelisted IP array. If they're on the list, they'll be allowed access. If not, sorry, no can do hombre. The whitelist is a comma-separated string:
 
@@ -132,7 +143,7 @@ You'll need to create a new database table to store and access the keys. `REST_C
 	  `ignore_limits` tinyint(1) NOT NULL DEFAULT '0',
 	  `date_created` int(11) NOT NULL,
 	  PRIMARY KEY (`id`)
-	) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+	) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 The class will look for an HTTP header with the API key on each request. An invalid or missing API key will result in an `HTTP 403 Forbidden`.
 
@@ -145,6 +156,20 @@ By default, the HTTP will be `X-API-KEY`. This can be configured in **config/res
 * [NetTuts: Working with RESTful Services in CodeIgniter](http://net.tutsplus.com/tutorials/php/working-with-restful-services-in-codeigniter-2/)
 
 ## Change Log
+
+### 2.7.0
+
+* Added Blacklist IP option
+* Added controller based access controls
+* Added support for OPTIONS, PATCH, and HEAD (from boh1996)
+* Added logging of the time it takes for a request (rtime column in DB)
+* Changed DB schemas to use InnoDB, not MyISAM
+* Updated Readme to reflect new developer (Chris Kacerguis)
+
+### 2.6.2
+
+* Update CodeIgniter files to 2.1.3
+* Fixed issue #165
 
 ### 2.6.1
 
@@ -204,15 +229,14 @@ By default, the HTTP will be `X-API-KEY`. This can be configured in **config/res
 
 * Added config options to set table names for keys, limits and logs.
 * FALSE values were coming out as empty strings in xml or rawxml mode, now they will be 0/1.
-* key => FALSE can now be used to override the keys_enabled option for a specific method, and level is now optional. If no level is set it will assume the method has a level of 0.
+* key => FALSE can now be used to override the keys_enabled option for a specific method, and level 
+is now optional. If no level is set it will assume the method has a level of 0.
 * Fixed issue where calls to ->get('foo') would error is foo was not set. Reported by  Paul Barto.
 
 ## Contributions
 
-This project has been funded and made possible through my clients kindly allowing me to 
-open-source the functionality as I build it into their projects. I am no longer actively developing 
-features for this as I no longer require it, but I will continue to maintain pull requests and try to 
-fix issues as and when they are reported (within a week or two). 
+This project was originally written by Phil Sturgeon, however his involvment has shifted 
+as he is no longer using it.  As of 11/20/2013 further developement and support will be done by Chris Kacerguis.
 
 Pull Requests are the best way to fix bugs or add features. I know loads of you use this, so please 
 contribute if you have improvements to be made and I'll keep releasing versions over time.
