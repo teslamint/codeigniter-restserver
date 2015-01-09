@@ -192,7 +192,7 @@ abstract class REST_Controller extends CI_Controller
      * Constructor function
      * @todo Document more please.
      */
-    public function __construct()
+    public function __construct($config = 'rest')
     {
         parent::__construct();
 
@@ -200,7 +200,7 @@ abstract class REST_Controller extends CI_Controller
         $this->_start_rtime = microtime(true);
 
         // Lets grab the config and get ready to party
-        $this->load->config('rest');
+        $this->load->config($config);
 
         // This library is bundled with REST_Controller 2.5+, but will eventually be part of CodeIgniter itself
         $this->load->library('format');
@@ -565,7 +565,7 @@ abstract class REST_Controller extends CI_Controller
         }
 
         // Check if a file extension is used
-        elseif ($this->_get_args and !is_array(end($this->_get_args)) and preg_match($pattern, end($this->_get_args), $matches)) {
+        elseif ($this->_get_args and !is_array(end($this->_get_args)) and preg_match($pattern, end(array_keys($this->_get_args)), $matches)) {
             // The key of the last argument
             $last_key = end(array_keys($this->_get_args));
 
@@ -1515,12 +1515,17 @@ abstract class REST_Controller extends CI_Controller
             return true;
         }
 
-        $controller = explode('/', $this->uri->uri_string());
+        // Fetch controller based on path and controller name
+        $controller = implode( '/', array($this->router->fetch_directory(), $this->router->fetch_class()) );
+        
+        // Remove any double slashes for safety
+        $controller = str_replace('//', '/', $controller);
 
+        // Build access table query
         $this->rest->db->select();
         $this->rest->db->where('key', $this->rest->key);
-        $this->rest->db->where('controller', $controller[0]);
-
+        $this->rest->db->where('controller', $controller);
+        
         $query = $this->rest->db->get(config_item('rest_access_table'));
 
         if ($query->num_rows > 0) {
